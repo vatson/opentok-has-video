@@ -1,0 +1,13 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.session {
+  display: flex;
+}
+
+.local video,
+.remote video {
+  width: 480px;
+}
