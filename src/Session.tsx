@@ -17,7 +17,7 @@ export const Session = ({
   onConnect,
   onDisconnect,
   onRemove,
-  isConnected
+  isConnected,
 }: SessionProps) => {
   return (
     <div className="session">
@@ -25,37 +25,9 @@ export const Session = ({
         {config.sid.slice(18, 32)}...
       </div>
       <div className="session-actions">
-        {isConnected && (
-          <span
-            className="session-action"
-            title="diconnected"
-            role="img"
-            aria-label="on-air"
-            onClick={onDisconnect}
-          >
-            🔴
-          </span>
-        )}
-        {!isConnected && (
-          <span
-            className="session-action"
-            title="connect"
-            role="img"
-            aria-label="connect"
-            onClick={onConnect}
-          >
-            🔌
-          </span>
-        )}
-        <span
-          className="session-action"
-          title="remove"
-          role="img"
-          aria-label="remove"
-          onClick={onRemove}
-        >
-          ❌
-        </span>
+        {isConnected && <button onClick={onDisconnect}>🔴 Disconnect</button>}
+        {!isConnected && <button onClick={onConnect}>⚪ Connect</button>}
+        <button onClick={onRemove}>❌ Remove</button>
       </div>
     </div>
   );
