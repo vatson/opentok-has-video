@@ -1,5 +1,5 @@
 import { Publisher, Session as OTSession, Subscriber } from "@opentok/client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "react-use";
 import { AddSessionConfig } from "./AddSessionConfig";
 import { Local } from "./Local";
@@ -13,10 +13,10 @@ export default function App() {
     []
   );
   const [currentSession, setCurrentSession] = useState<OTSession>();
-  const [publisher, setPublisher] = useState<Publisher>(); 
+  const [publisher, setPublisher] = useState<Publisher>();
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
 
-  // const [hasVideo, setHasVideo] = useState<boolean>();
+  const [hasVideo, setHasVideo] = useState<boolean>();
 
   const addConfig = useCallback(
     (newConfig: SessionConfig) => {
@@ -36,10 +36,11 @@ export default function App() {
       if (publisher) {
         currentSession.unpublish(publisher);
       }
-      subscribers.forEach(s => currentSession.unsubscribe(s));
+      subscribers.forEach((s) => currentSession.unsubscribe(s));
 
       currentSession.disconnect();
 
+      setHasVideo(undefined);
       setCurrentSession(undefined);
       setSubscribers([]);
     }
@@ -54,27 +55,21 @@ export default function App() {
       const session = OT.initSession(config.apiKey, config.sid);
       setCurrentSession(session);
 
-      // session.on("streamCreated", function ({ stream }) {
-      //   const subscriber = session.subscribe(stream, "", {
-      //     insertDefaultUI: false
-      //   });
-  
-      //   subscriber.on('destroyed', () => {
-      //     session.unsubscribe(subscriber);
-      //     setSubscribers(subscribers => subscribers.filter(s => s !== subscriber));
-      //   });
-  
-      //   setSubscribers(subscribers => {
-      //     return [...subscribers, subscriber]
-      //   });
-      // });
-
       session.connect(config.token, (error) => {
-        if (error) return alert(error);
+        if (error) {
+          setCurrentSession(undefined);
+          return alert(error);
+        }
 
         if (publisher) {
-          // setHasVideo(publisher.stream?.hasVideo!);
-          console.log(publisher);
+          if (publisher.stream) {
+            setHasVideo(publisher.stream.hasVideo!);
+          } else {
+            publisher.once("streamCreated", () =>
+              setHasVideo(publisher.stream?.hasVideo!)
+            );
+          }
+
           session.publish(publisher, (err) => err && alert(err));
         }
       });
@@ -89,7 +84,7 @@ export default function App() {
       }
 
       setSessionConfig(() => {
-        return sessionConfigs?.filter((config) => config.sid !== removing.sid)
+        return sessionConfigs?.filter((config) => config.sid !== removing.sid);
       });
     },
     [currentSession, setSessionConfig, disconnect, sessionConfigs]
@@ -97,56 +92,59 @@ export default function App() {
 
   const initPublisher = useCallback((publisher: Publisher) => {
     setPublisher(publisher);
-
-    // if (currentSession && currentSession.connection) {
-    //   currentSession.publish(publisher, (err) => err && alert(err));
-    // }
-  }, [])
+  }, []);
 
   useEffect(() => {
     if (!currentSession) return;
 
     currentSession.on("streamCreated", function ({ stream }) {
       const subscriber = currentSession.subscribe(stream, "", {
-        insertDefaultUI: false
+        insertDefaultUI: false,
       });
 
-      subscriber.on('destroyed', () => {
-        setSubscribers(subscribers => subscribers.filter(s => s !== subscriber));
+      subscriber.on("destroyed", () => {
+        setSubscribers((subscribers) =>
+          subscribers.filter((s) => s !== subscriber)
+        );
       });
 
-      setSubscribers(subscribers => [...subscribers, subscriber]);
+      setSubscribers((subscribers) => [...subscribers, subscriber]);
     });
 
     return () => {
       currentSession.off("streamCreated");
-    }
+    };
   }, [currentSession]);
 
   return (
     <div className="App">
-      {/* Stream has video: { String(hasVideo) } */}
+      <div className="videos">
+        <Local onInit={initPublisher} hasVideo={hasVideo} />
+        <div className="remotes">
+          {subscribers.map((subscriber, i) => (
+            <Remote key={subscriber.id || i} subscriber={subscriber} />
+          ))}
+        </div>
+      </div>
 
-      <Local onInit={initPublisher} />
-      <div className="subscribers">
-        {subscribers.map((subscriber, i) => (
-          <Remote key={subscriber.id || i} subscriber={subscriber} />
-        ))}
-      </div>
-      <div className="sessions">
-        {sessionConfigs?.map((config) => (
-          <Session
-            key={config.sid}
-            config={config}
-            isConnected={
-              currentSession && currentSession.sessionId === config.sid
-            }
-            onRemove={() => removeConfig(config)}
-            onConnect={() => connect(config)}
-            onDisconnect={() => disconnect()}
-          />
-        ))}
-      </div>
+      {!!sessionConfigs?.length && (
+        <div className="sessions">
+          <h2>Sessions</h2>
+          {sessionConfigs?.map((config) => (
+            <Session
+              key={config.sid}
+              config={config}
+              isConnected={
+                currentSession && currentSession.sessionId === config.sid
+              }
+              onRemove={() => removeConfig(config)}
+              onConnect={() => connect(config)}
+              onDisconnect={() => disconnect()}
+            />
+          ))}
+        </div>
+      )}
+
       <AddSessionConfig onAdd={addConfig} />
     </div>
   );

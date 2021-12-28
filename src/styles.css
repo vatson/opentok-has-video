@@ -1,13 +1,50 @@
 .App {
   font-family: sans-serif;
-  text-align: center;
 }
 
 .session {
   display: flex;
+  align-items: center;
+  width: 400px;
+}
+
+.session-id {
+  flex: 2;
+}
+
+.session-actions button {
+  margin: 0.5em;
+}
+
+.videos {
+  display: flex;
+}
+
+.local,
+.remote {
+  width: 480px;
+  margin: 0.5em;
 }
 
 .local video,
 .remote video {
-  width: 480px;
+  max-height: 240px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.new-session {
+  margin: 2rem 0;
+  width: 400px;
+  font-size: 1.5rem;
+}
+
+.new-session input,
+.new-session button {
+  margin: 0.5em 0;
+  font-size: 1.2rem;
+}
+
+.new-session input {
+  width: 100%;
 }
