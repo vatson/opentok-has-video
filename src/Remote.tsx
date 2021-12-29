@@ -20,7 +20,9 @@ export const Remote = ({ subscriber }: RemoteProps) => {
 
   return (
     <div className="remote">
-      <div className="local-header">Remote (has video: {String(hasVideo)})</div>
+      <div className="local-header">
+        subscriber.stream.hasVideo: {String(hasVideo)}
+      </div>
       <video ref={videoRef} autoPlay playsInline></video>
     </div>
   );

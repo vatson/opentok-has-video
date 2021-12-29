@@ -94,6 +94,15 @@ export default function App() {
     setPublisher(publisher);
   }, []);
 
+  const onPublisherVideoChange = useCallback(() => {
+    setTimeout(
+      () =>
+        !(publisher?.stream as any).destroyed &&
+        setHasVideo(() => publisher?.stream?.hasVideo),
+      300
+    );
+  }, [publisher?.stream]);
+
   useEffect(() => {
     if (!currentSession) return;
 
@@ -119,7 +128,11 @@ export default function App() {
   return (
     <div className="App">
       <div className="videos">
-        <Local onInit={initPublisher} hasVideo={hasVideo} />
+        <Local
+          onInit={initPublisher}
+          hasVideo={hasVideo}
+          onVideoChange={onPublisherVideoChange}
+        />
         <div className="remotes">
           {subscribers.map((subscriber, i) => (
             <Remote key={subscriber.id || i} subscriber={subscriber} />
